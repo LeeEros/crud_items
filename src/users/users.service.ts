@@ -7,17 +7,22 @@ import { UpdateUserDto } from './dto/update-user.dto';
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
-  async create(createUserDto: CreateUserDto) {
-    const encryptedPassword = await hash(createUserDto.password, 10);
 
-    const userCreated = await this.prisma.users.create({
-      data: {
-        ...createUserDto,
-        password: encryptedPassword,
-      },
-    });
+  async create(createUserDto: CreateUserDto): Promise<any> {
+    try {
+      const encryptedPassword = await hash(createUserDto.password, 10);
+      const userCreated = await this.prisma.users.create({
+        data: {
+          ...createUserDto,
+          password: encryptedPassword,
+        },
+      });
 
-    return userCreated;
+      return userCreated;
+    } catch (error) {
+      console.error('Erro ao criar o usuário:', error);
+      throw new Error('Erro ao criar o usuário. Tente novamente mais tarde.');
+    }
   }
 
   async findAll() {
