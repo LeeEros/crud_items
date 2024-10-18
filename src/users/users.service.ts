@@ -20,19 +20,41 @@ export class UsersService {
     return userCreated;
   }
 
-  findAll() {
-    return `This action returns all users`;
+  async findAll() {
+    return await this.prisma.users.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: number) {
+    return await this.prisma.users.findUnique({
+      where: {
+        id: id,
+      },
+    });
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  async update(id: number, updateUserDto: UpdateUserDto) {
+    if (updateUserDto.password) {
+      updateUserDto.password = await hash(updateUserDto.password, 10);
+    }
+
+    return await this.prisma.users.update({
+      where: { id },
+      data: updateUserDto,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  async remove(id: number): Promise<string> {
+    try {
+      const user = await this.prisma.users.delete({
+        where: { id },
+      });
+
+      return `O usuário com ID #${id} foi removido com sucesso.`;
+    } catch (error) {
+      if (error.code === 'P2025') {
+        return `Erro: Usuário com ID #${id} não foi encontrado.`;
+      }
+      return `Erro ao remover o usuário com ID #${id}: ${error.message}`;
+    }
   }
 }
